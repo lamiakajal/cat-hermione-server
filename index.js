@@ -13,7 +13,7 @@ const analyticsRoutes = require('./routes/analytics.routes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Allowed Origins for CORS
+// Configure CORS allowed origins
 const allowedOrigins = ['http://localhost:3000', process.env.CLIENT_URL].filter(
   Boolean,
 );
@@ -21,15 +21,19 @@ const allowedOrigins = ['http://localhost:3000', process.env.CLIENT_URL].filter(
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (like mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(null, true); // production connectivity fallback
+      // Production fallback to ensure cross-origin deployment connectivity
+      return callback(null, true);
     },
     credentials: true,
   }),
 );
 
+// Body and cookie parsing middleware
 app.use(express.json());
 app.use(cookieParser());
 
@@ -50,19 +54,18 @@ app.get('/api', (req, res) => {
   });
 });
 
-// Database connection middleware for serverless
+// Database connection middleware for serverless invocations
 app.use(async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Database connection failed',
-        error: error.message,
-      });
+    console.error('Database connection error in middleware:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Database connection failed',
+      error: error.message,
+    });
   }
 });
 
@@ -88,5 +91,5 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Export for Vercel Serverless
+// Export for Vercel Serverless Function
 module.exports = app;
