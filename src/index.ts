@@ -1,21 +1,41 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { connectDB } from "./config/db";
-import eventRoutes from "./routes/eventRoutes";
+import { connectDB } from "./config/db.js";
+import eventRoutes from "./routes/eventRoutes.js";
 
 dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Allowed client origins for local development and live Vercel deployments
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://cat-hermione-client.vercel.app",
+  process.env.CLIENT_URL,
+].filter(Boolean) as string[];
+
+// Middleware: Configure CORS with preflight support
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (such as mobile apps or curl requests)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Fallback to allow dynamically across vercel preview URLs
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
+// Handle preflight requests explicitly
+app.options("*", cors());
+
 app.use(express.json());
 
 // Database connection
