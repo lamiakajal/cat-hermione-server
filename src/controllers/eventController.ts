@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Event } from "../models/Event";
+import { Event } from "../models/Event.js";
 
 // 1. Get all events with Search, Filter & Sort
 export const getEvents = async (req: Request, res: Response): Promise<void> => {
