@@ -55,13 +55,11 @@ export const createEvent = async (
     const newEvent = await Event.create(req.body);
     res.status(201).json({ success: true, data: newEvent });
   } catch (error) {
-    res
-      .status(400)
-      .json({
-        success: false,
-        message: "Validation failed for event creation",
-        error,
-      });
+    res.status(400).json({
+      success: false,
+      message: "Validation failed for event creation",
+      error,
+    });
   }
 };
 
@@ -83,12 +81,10 @@ export const joinEvent = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (event.attendees.includes(userEmail)) {
-      res
-        .status(400)
-        .json({
-          success: false,
-          message: "You have already joined this event",
-        });
+      res.status(400).json({
+        success: false,
+        message: "You have already joined this event",
+      });
       return;
     }
 
@@ -96,13 +92,11 @@ export const joinEvent = async (req: Request, res: Response): Promise<void> => {
     event.attendeesCount += 1;
     await event.save();
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Successfully joined the drive",
-        data: event,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Successfully joined the drive",
+      data: event,
+    });
   } catch {
     res.status(500).json({ success: false, message: "Failed to join event" });
   }
@@ -178,5 +172,33 @@ export const deleteEvent = async (
       .json({ success: true, message: "Event removed successfully" });
   } catch {
     res.status(500).json({ success: false, message: "Failed to delete event" });
+  }
+};
+
+// 8. Update an existing event (Edit Drive)
+export const updateEvent = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const updated = await Event.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updated) {
+      res.status(404).json({ success: false, message: "Event not found" });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Event updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    res
+      .status(400)
+      .json({ success: false, message: "Failed to update event", error });
   }
 };
