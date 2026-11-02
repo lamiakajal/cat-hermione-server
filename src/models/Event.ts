@@ -1,17 +1,31 @@
 import { Schema, model, Document } from "mongoose";
 
+// "Environment" and "Community" are kept so older documents still validate on update
+export const EVENT_TYPES = [
+  "Cleanup",
+  "Plantation",
+  "Donation",
+  "Healthcare",
+  "Education",
+  "Awareness",
+  "Relief",
+  "Other",
+] as const;
+
+const LEGACY_TYPES = ["Environment", "Community"] as const;
+
 export interface IEvent extends Document {
   title: string;
-  category: "Healthcare" | "Relief" | "Education" | "Environment" | "Community";
+  category: string;
   eventDate: Date;
   location: string;
   description: string;
   bannerImage: string;
   organizerName: string;
   organizerEmail: string;
+  contactEmail?: string;
   organizerPhoto?: string;
   attendeesCount: number;
-  attendees: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,17 +36,17 @@ const EventSchema = new Schema<IEvent>(
     category: {
       type: String,
       required: true,
-      enum: ["Healthcare", "Relief", "Education", "Environment", "Community"],
+      enum: [...EVENT_TYPES, ...LEGACY_TYPES],
     },
-    eventDate: { type: Date, required: true },
+    eventDate: { type: Date, required: true, index: true },
     location: { type: String, required: true, trim: true },
     description: { type: String, required: true },
     bannerImage: { type: String, required: true },
     organizerName: { type: String, required: true },
-    organizerEmail: { type: String, required: true },
+    organizerEmail: { type: String, required: true, index: true },
+    contactEmail: { type: String, trim: true },
     organizerPhoto: { type: String },
     attendeesCount: { type: Number, default: 0 },
-    attendees: { type: [String], default: [] },
   },
   { timestamps: true },
 );
